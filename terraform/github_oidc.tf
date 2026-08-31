@@ -34,10 +34,8 @@ resource "aws_iam_role" "github_actions" {
         Condition = {
           StringEquals = {
             "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
-          }
 
-          StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:AKworlds/terraform-docker-project:*"
+            "token.actions.githubusercontent.com:sub" = "repo:AKworlds@106362203/terraform-docker-project@1352333246:ref:refs/heads/main"
           }
         }
       }
@@ -59,7 +57,7 @@ resource "aws_iam_role_policy" "github_actions" {
 
     Statement = [
       {
-        Sid    = "ECRAuth"
+        Sid    = "ECRAuthorization"
         Effect = "Allow"
 
         Action = [
@@ -70,7 +68,7 @@ resource "aws_iam_role_policy" "github_actions" {
       },
 
       {
-        Sid    = "ECRPush"
+        Sid    = "ECRImageManagement"
         Effect = "Allow"
 
         Action = [
@@ -87,21 +85,23 @@ resource "aws_iam_role_policy" "github_actions" {
       },
 
       {
-        Sid    = "ECSDeploy"
+        Sid    = "ECSDeployment"
         Effect = "Allow"
 
         Action = [
           "ecs:DescribeServices",
           "ecs:DescribeTaskDefinition",
           "ecs:RegisterTaskDefinition",
-          "ecs:UpdateService"
+          "ecs:UpdateService",
+          "ecs:DescribeTasks",
+          "ecs:ListTasks"
         ]
 
         Resource = "*"
       },
 
       {
-        Sid    = "PassTaskRoles"
+        Sid    = "PassECSTaskExecutionRole"
         Effect = "Allow"
 
         Action = [

@@ -74,3 +74,25 @@ jobs:
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
+
+      - name: Show GitHub OIDC claims
+        env:
+          AUDIENCE: "sts.amazonaws.com"
+        run: |
+          TOKEN_JSON=$(curl -s \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=$AUDIENCE")
+
+          ID_TOKEN=$(echo "$TOKEN_JSON" | jq -r '.value')
+
+          PAYLOAD=$(echo "$ID_TOKEN" | cut -d '.' -f2)
+
+          case $((${#PAYLOAD} % 4)) in
+            2) PAYLOAD="${PAYLOAD}==" ;;
+            3) PAYLOAD="${PAYLOAD}=" ;;
+          esac
+
+          echo "$PAYLOAD" \
+            | tr '_-' '/+' \
+            | base64 -d \
+            | jq '{iss, aud, sub, repository, repository_id, repository_owner, repository_owner_id, ref}'
